@@ -8,6 +8,7 @@
   --border-color: #dee2e6;
   --danger-color: #dc3545;
   --success-color: #28a745;
+  --warning-color: #ffc107;
   
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -37,10 +38,120 @@ body {
 }
 
 /* Layout */
-.pos-container {
+.app-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
+}
+
+.top-nav {
+  display: flex;
+  background-color: var(--surface-color);
+  padding: 0 var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  height: 60px;
+}
+
+.nav-brand {
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--primary-color);
+  margin-right: var(--spacing-lg);
+}
+
+.nav-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.nav-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Table Map View */
+.table-map-container {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  background: var(--background-color);
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.table-card {
+  background: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid transparent;
+}
+
+.table-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.table-card.active {
+  border-color: var(--primary-color);
+  background-color: #e6f2ff;
+}
+
+.table-card.active .table-name {
+  color: var(--primary-color);
+}
+
+.table-name {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.table-status {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.table-amount {
+  font-weight: bold;
+  color: var(--danger-color);
+  margin-top: 4px;
+}
+
+/* POS View */
+.pos-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
 }
 
 .left-panel {
@@ -58,13 +169,13 @@ body {
   background-color: var(--surface-color);
 }
 
-/* Header */
 .header {
   padding: var(--spacing-md);
   background-color: var(--surface-color);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
+  gap: var(--spacing-md);
 }
 
 .search-bar {
@@ -81,7 +192,29 @@ body {
   border-color: var(--primary-color);
 }
 
-/* Products */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.category-tab {
+  padding: 6px 12px;
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.category-tab.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
 .products-area {
   flex: 1;
   overflow-y: auto;
@@ -90,7 +223,7 @@ body {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: var(--spacing-md);
 }
 
@@ -100,23 +233,21 @@ body {
   padding: var(--spacing-md);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.1s;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 120px;
+  height: 110px;
   border: 1px solid transparent;
 }
 
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-color);
+.product-card:active {
+  transform: scale(0.98);
 }
 
 .product-name {
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.4;
   margin-bottom: var(--spacing-sm);
   display: -webkit-box;
@@ -128,7 +259,7 @@ body {
 .product-price {
   color: var(--primary-color);
   font-weight: bold;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* Cart */
@@ -194,10 +325,6 @@ body {
   font-weight: bold;
 }
 
-.btn-qty:hover {
-  background: var(--secondary-color);
-}
-
 .item-qty {
   width: 30px;
   text-align: center;
@@ -219,7 +346,6 @@ body {
   margin-left: 8px;
 }
 
-/* Cart Footer */
 .cart-footer {
   padding: var(--spacing-md);
   border-top: 1px solid var(--border-color);
@@ -243,44 +369,182 @@ body {
   border-top: 1px dashed var(--border-color);
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-kitchen {
+  flex: 1;
+  padding: 12px;
+  background-color: var(--warning-color);
+  color: #000;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  cursor: pointer;
+}
+
 .btn-checkout {
-  width: 100%;
-  padding: 16px;
+  flex: 2;
+  padding: 12px;
   background-color: var(--success-color);
   color: white;
   border: none;
   border-radius: var(--border-radius);
-  font-size: 18px;
   font-weight: bold;
   cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  transition: background-color 0.2s;
 }
 
-.btn-checkout:hover {
-  background-color: #218838;
-}
-
-.btn-checkout:disabled {
+.btn-checkout:disabled, .btn-kitchen:disabled {
   background-color: #6c757d;
+  color: white;
   cursor: not-allowed;
 }
 
-.empty-cart {
+/* Kitchen View */
+.kitchen-container {
+  flex: 1;
   padding: var(--spacing-lg);
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
+  overflow-y: auto;
+  background: var(--background-color);
 }
 
-/* Setup placeholder component */
-.loading-state {
+.kitchen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.kitchen-card {
+  background: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.kitchen-card-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--danger-color);
+}
+
+.kitchen-item {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  height: 100%;
-  color: var(--text-secondary);
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.kitchen-item-name {
+  font-weight: 500;
+}
+
+.btn-done {
+  background: var(--success-color);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Popup / Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius);
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.qr-code-img {
+  width: 100%;
+  max-width: 300px;
+  margin: 16px auto;
+  display: block;
+}
+
+.btn-print {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+/* Print CSS */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Print Bill Component styles */
+.bill-print {
+  width: 80mm; /* Standard thermal printer width */
+  margin: 0 auto;
+  padding: 10px;
+  background: white;
+}
+.bill-header {
+  text-align: center;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed black;
+  padding-bottom: 10px;
+}
+.bill-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+.bill-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.bill-total {
+  border-top: 1px dashed black;
+  margin-top: 10px;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 16px;
 }

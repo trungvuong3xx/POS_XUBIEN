@@ -1,83 +1,69 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './index.css';
 
-// Dữ liệu mẫu (nếu chưa gọi được API từ Google Sheets)
+import TableMap from './components/TableMap';
+import PosView from './components/PosView';
+import KitchenView from './components/KitchenView';
+
+// Dữ liệu mẫu CÓ THÊM PHÂN LOẠI
 const MOCK_DATA = [
-  { id: 1, name: "Phở bò", price: 45000 },
-  { id: 2, name: "Bún chả Hà Nội", price: 40000 },
-  { id: 3, name: "Cơm tấm sườn bì chả", price: 50000 },
-  { id: 4, name: "Bánh mì chảo", price: 35000 },
-  { id: 5, name: "Bún bò Huế", price: 45000 },
-  { id: 6, name: "Hủ tiếu Nam Vang", price: 40000 },
-  { id: 7, name: "Bánh xèo miền Tây", price: 50000 },
-  { id: 8, name: "Mì Quảng", price: 45000 },
-  { id: 9, name: "Bún đậu mắm tôm", price: 40000 },
-  { id: 10, name: "Gỏi cuốn (3 cuốn)", price: 25000 },
-  { id: 11, name: "Bánh cuốn nhân thịt", price: 35000 },
-  { id: 12, name: "Cơm chiên Dương Châu", price: 45000 },
-  { id: 13, name: "Chả cá Lã Vọng", price: 90000 },
-  { id: 14, name: "Bún riêu cua", price: 35000 },
-  { id: 15, name: "Nem nướng Nha Trang", price: 50000 },
-  { id: 16, name: "Bánh canh cua", price: 45000 },
-  { id: 17, name: "Bún thịt nướng", price: 35000 },
-  { id: 18, name: "Cơm gà xối mỡ", price: 40000 },
-  { id: 19, name: "Lẩu Thái hải sản", price: 150000 },
-  { id: 20, name: "Chè thập cẩm", price: 20000 }
+  { id: 1, name: "Phở bò", price: 45000, category: "Đồ ăn" },
+  { id: 2, name: "Bún chả Hà Nội", price: 40000, category: "Đồ ăn" },
+  { id: 3, name: "Cơm tấm sườn bì chả", price: 50000, category: "Đồ ăn" },
+  { id: 19, name: "Lẩu Thái hải sản", price: 150000, category: "Đồ ăn" },
+  { id: 20, name: "Chè thập cẩm", price: 20000, category: "Tráng miệng" },
+  { id: 21, name: "Cà phê sữa đá", price: 25000, category: "Đồ uống" },
+  { id: 22, name: "Trà đào cam sả", price: 35000, category: "Đồ uống" },
+  { id: 23, name: "Sinh tố bơ", price: 40000, category: "Đồ uống" },
 ];
 
-// Định dạng tiền tệ VNĐ
-const formatMoney = (amount) => {
-  return amount.toLocaleString('vi-VN') + ' đ';
-};
+const INIT_TABLES = Array.from({ length: 12 }, (_, i) => ({
+  id: `T${i + 1}`,
+  name: `Bàn ${i + 1}`
+}));
 
 function App() {
-  const [products, setProducts] = useState(MOCK_DATA);
-  const [cart, setCart] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [view, setView] = useState('table-map'); // 'table-map', 'pos', 'kitchen'
+  
+  const [products] = useState(MOCK_DATA);
+  const [tables] = useState(INIT_TABLES);
+  
+  const [currentTableId, setCurrentTableId] = useState(null);
+  
+  // State lưu giỏ hàng của từng bàn: { "T1": [...], "T2": [...] }
+  const [orders, setOrders] = useState({});
+  
+  // Hàng chờ gửi Bếp
+  const [kitchenQueue, setKitchenQueue] = useState([]);
 
-  // Link Web App của Google Apps Script (Bạn cần thay thế link này sau khi deploy)
-  const API_URL = ''; 
+  // --- POS Logic ---
+  const currentCart = currentTableId && orders[currentTableId] ? orders[currentTableId] : [];
 
-  useEffect(() => {
-    if (API_URL) {
-      setIsLoading(true);
-      fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.data) {
-            setProducts(data.data);
-          }
-          setIsLoading(false);
-        })
-        .catch(err => {
-          console.error("Lỗi tải menu:", err);
-          setIsLoading(false);
-        });
-    }
-  }, []);
-
-  // Lọc sản phẩm theo tìm kiếm
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Thêm vào giỏ hàng
-  const addToCart = (product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
+  const updateCart = (newCart) => {
+    if (!currentTableId) return;
+    setOrders(prev => ({
+      ...prev,
+      [currentTableId]: newCart
+    }));
   };
 
-  // Cập nhật số lượng
-  const updateQuantity = (id, delta) => {
-    setCart(prev => prev.map(item => {
+  const handleAddToCart = (product) => {
+    if (!currentTableId) {
+      alert("Vui lòng chọn bàn trước khi gọi món!");
+      return;
+    }
+    const existing = currentCart.find(item => item.id === product.id);
+    if (existing) {
+      updateCart(currentCart.map(item => 
+        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+      ));
+    } else {
+      updateCart([...currentCart, { ...product, quantity: 1, sentToKitchen: false }]);
+    }
+  };
+
+  const handleUpdateQuantity = (id, delta) => {
+    updateCart(currentCart.map(item => {
       if (item.id === id) {
         const newQty = item.quantity + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : item;
@@ -86,140 +72,121 @@ function App() {
     }));
   };
 
-  // Xóa khỏi giỏ hàng
-  const removeFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+  const handleRemoveFromCart = (id) => {
+    updateCart(currentCart.filter(item => item.id !== id));
   };
 
-  // Tính tổng tiền
-  const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-  // Xử lý thanh toán
-  const handleCheckout = () => {
-    if (cart.length === 0) return;
-
-    if (!API_URL) {
-      alert("Đã thanh toán (Chế độ Demo):\nTổng tiền: " + formatMoney(totalAmount));
-      setCart([]);
+  const handleSendToKitchen = () => {
+    if (currentCart.length === 0) return;
+    
+    // Lọc các món chưa gửi bếp
+    const unsentItems = currentCart.filter(item => !item.sentToKitchen);
+    if (unsentItems.length === 0) {
+      alert("Tất cả các món đã được gửi bếp rồi!");
       return;
     }
 
-    const payload = {
-      items: cart,
-      total: totalAmount
+    const currentTable = tables.find(t => t.id === currentTableId);
+    
+    const newOrder = {
+      id: Date.now(),
+      tableId: currentTableId,
+      tableName: currentTable.name,
+      time: new Date().toISOString(),
+      items: unsentItems.map(item => ({ ...item }))
     };
 
-    fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert("Thanh toán thành công! Mã HĐ: " + data.orderId);
-        setCart([]); // Xóa giỏ hàng
-      } else {
-        alert("Có lỗi xảy ra: " + data.error);
-      }
-    })
-    .catch(err => {
-      alert("Lỗi kết nối đến Google Sheets");
-      console.error(err);
-    });
+    setKitchenQueue(prev => [...prev, newOrder]);
+    
+    // Đánh dấu đã gửi bếp trong giỏ
+    updateCart(currentCart.map(item => ({ ...item, sentToKitchen: true })));
+    alert("Đã gửi order xuống bếp!");
   };
 
+  const handleCheckout = () => {
+    // Xóa giỏ hàng của bàn này
+    const newOrders = { ...orders };
+    delete newOrders[currentTableId];
+    setOrders(newOrders);
+    setCurrentTableId(null);
+    setView('table-map');
+  };
+
+  // --- Kitchen Logic ---
+  const handleMarkAsDone = (orderId, itemId) => {
+    setKitchenQueue(prev => prev.map(order => {
+      if (order.id === orderId) {
+        return {
+          ...order,
+          items: order.items.filter(i => i.id !== itemId)
+        };
+      }
+      return order;
+    }).filter(order => order.items.length > 0)); // Xóa order nếu không còn món nào
+  };
+
+  const currentTable = tables.find(t => t.id === currentTableId);
+
   return (
-    <div className="pos-container">
-      {/* Cột trái: Danh sách sản phẩm */}
-      <div className="left-panel">
-        <div className="header">
-          <input 
-            type="text" 
-            className="search-bar" 
-            placeholder="🔍 Tìm mặt hàng (F3)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="products-area">
-          {isLoading ? (
-            <div className="loading-state">Đang tải dữ liệu từ Google Sheets...</div>
-          ) : (
-            <div className="product-grid">
-              {filteredProducts.map(product => (
-                <div 
-                  key={product.id} 
-                  className="product-card"
-                  onClick={() => addToCart(product)}
-                >
-                  <div className="product-name">{product.name}</div>
-                  <div className="product-price">{formatMoney(product.price)}</div>
-                </div>
-              ))}
-            </div>
-          )}
+    <div className="app-container">
+      {/* Navigation Bar */}
+      <div className="top-nav no-print">
+        <div className="nav-brand">XUBIEN POS</div>
+        <div className="nav-tabs">
+          <button 
+            className={`nav-tab ${view === 'table-map' ? 'active' : ''}`}
+            onClick={() => setView('table-map')}
+          >
+            Sơ đồ bàn
+          </button>
+          <button 
+            className={`nav-tab ${view === 'pos' ? 'active' : ''}`}
+            onClick={() => setView('pos')}
+          >
+            Bán hàng (POS)
+          </button>
+          <button 
+            className={`nav-tab ${view === 'kitchen' ? 'active' : ''}`}
+            onClick={() => setView('kitchen')}
+          >
+            Bếp
+            {kitchenQueue.length > 0 && <span style={{marginLeft: '4px', background:'red', color:'white', borderRadius:'50%', padding:'2px 6px', fontSize:'12px'}}>{kitchenQueue.reduce((a, b) => a + b.items.length, 0)}</span>}
+          </button>
         </div>
       </div>
 
-      {/* Cột phải: Hóa đơn */}
-      <div className="right-panel">
-        <div className="cart-header">
-          <span>Hóa đơn mới</span>
-          <span style={{color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 'normal'}}>
-            {totalItems} món
-          </span>
-        </div>
-        
-        <div className="cart-items">
-          {cart.length === 0 ? (
-            <div className="empty-cart">Chưa có món nào được chọn.</div>
-          ) : (
-            cart.map((item, index) => (
-              <div key={item.id} className="cart-item">
-                <div className="item-index">{index + 1}</div>
-                <div className="item-info">
-                  <div className="item-name">{item.name}</div>
-                  <div className="item-price">{formatMoney(item.price)}</div>
-                </div>
-                <div className="item-controls">
-                  <button className="btn-qty" onClick={() => updateQuantity(item.id, -1)}>−</button>
-                  <div className="item-qty">{item.quantity}</div>
-                  <button className="btn-qty" onClick={() => updateQuantity(item.id, 1)}>+</button>
-                </div>
-                <div className="item-total">
-                  {formatMoney(item.price * item.quantity)}
-                </div>
-                <button className="btn-delete" onClick={() => removeFromCart(item.id)}>
-                  ✕
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+      <div className="main-content">
+        {view === 'table-map' && (
+          <TableMap 
+            tables={tables}
+            currentTableId={currentTableId}
+            onSelectTable={(id) => {
+              setCurrentTableId(id);
+              setView('pos');
+            }}
+            orders={orders}
+          />
+        )}
 
-        <div className="cart-footer">
-          <div className="summary-row">
-            <span>Tổng tiền hàng</span>
-            <span>{formatMoney(totalAmount)}</span>
-          </div>
-          <div className="summary-row">
-            <span>Giảm giá</span>
-            <span>0 đ</span>
-          </div>
-          <div className="summary-row total">
-            <span>Khách cần trả</span>
-            <span>{formatMoney(totalAmount)}</span>
-          </div>
-          
-          <button 
-            className="btn-checkout" 
-            disabled={cart.length === 0}
-            onClick={handleCheckout}
-          >
-            THANH TOÁN (F9)
-          </button>
-        </div>
+        {view === 'pos' && (
+          <PosView 
+            products={products}
+            cart={currentCart}
+            currentTable={currentTable}
+            onAddToCart={handleAddToCart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveFromCart={handleRemoveFromCart}
+            onSendToKitchen={handleSendToKitchen}
+            onCheckout={handleCheckout}
+          />
+        )}
+
+        {view === 'kitchen' && (
+          <KitchenView 
+            kitchenQueue={kitchenQueue}
+            onMarkAsDone={handleMarkAsDone}
+          />
+        )}
       </div>
     </div>
   );
