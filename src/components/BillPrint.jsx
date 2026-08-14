@@ -18,12 +18,17 @@ export default function BillPrint({ cart, tableName, totalAmount }) {
       
       <div style={{marginBottom: '10px'}}>
         {cart.map((item, idx) => (
-          <div key={idx} className="bill-item">
-            <div>
-              <div>{item.name}</div>
-              <div style={{fontSize: '12px'}}>{item.quantity} x {formatMoney(item.price)}</div>
+          <div key={idx} style={{marginBottom: '5px'}}>
+            <div className="bill-item">
+              <div>
+                <div>{item.name}</div>
+                <div style={{fontSize: '12px'}}>{item.quantity} x {formatMoney(item.price)}</div>
+              </div>
+              <div>{formatMoney(item.price * item.quantity)}</div>
             </div>
-            <div>{formatMoney(item.price * item.quantity)}</div>
+            {item.note && (
+              <div style={{fontSize: '12px', fontStyle: 'italic', marginLeft: '10px'}}>- {item.note}</div>
+            )}
           </div>
         ))}
       </div>

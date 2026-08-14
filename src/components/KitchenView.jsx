@@ -18,9 +18,14 @@ export default function KitchenView({ kitchenQueue, onMarkAsDone }) {
               </div>
               <div>
                 {order.items.map((item, i) => (
-                  <div key={i} className="kitchen-item">
-                    <span className="kitchen-item-name">{item.quantity}x {item.name}</span>
-                    <button className="btn-done" onClick={() => onMarkAsDone(order.id, item.id)}>XONG</button>
+                  <div key={i} className="kitchen-item-wrapper">
+                    <div className="kitchen-item">
+                      <span className="kitchen-item-name">{item.quantity}x {item.name}</span>
+                      <button className="btn-done" onClick={() => onMarkAsDone(order.id, item.id)}>XONG</button>
+                    </div>
+                    {item.note && (
+                      <div className="kitchen-item-note">📝 {item.note}</div>
+                    )}
                   </div>
                 ))}
               </div>

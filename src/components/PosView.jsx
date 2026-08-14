@@ -3,6 +3,13 @@ import BillPrint from './BillPrint';
 
 const formatMoney = (amount) => amount.toLocaleString('vi-VN') + ' đ';
 
+// Danh sách ghi chú gợi ý nhanh
+const QUICK_NOTES = [
+  "Ít đá", "Nhiều đá", "Không đá", 
+  "Ít đường", "Nhiều đường", "Không đường",
+  "Không hành", "Không cay", "Mang về"
+];
+
 export default function PosView({ 
   products, 
   cart, 
@@ -10,12 +17,17 @@ export default function PosView({
   onAddToCart, 
   onUpdateQuantity, 
   onRemoveFromCart, 
+  onUpdateNote,
   onSendToKitchen, 
   onCheckout 
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  
+  // State cho Modal Ghi chú
+  const [noteModalTarget, setNoteModalTarget] = useState(null); // Lưu { id, name, currentNote }
+  const [tempNote, setTempNote] = useState('');
 
   // Extract unique categories
   const categories = ['Tất cả', ...new Set(products.map(p => p.category))];
@@ -42,11 +54,28 @@ export default function PosView({
     setShowCheckoutModal(false);
   };
 
-  // VietQR URL builder (using a demo generic account)
+  // VietQR URL builder
   const bankId = "970415"; // Vietinbank
   const accountNo = "113366668888";
   const accountName = "NGUYEN VAN A";
   const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${totalAmount}&addInfo=Thanh toan ${currentTable?.name}&accountName=${accountName}`;
+
+  // Logic Mở Modal Ghi chú
+  const openNoteModal = (item) => {
+    setNoteModalTarget(item);
+    setTempNote(item.note || '');
+  };
+
+  const saveNote = () => {
+    if (noteModalTarget) {
+      onUpdateNote(noteModalTarget.id, tempNote);
+      setNoteModalTarget(null);
+    }
+  };
+
+  const addQuickNote = (note) => {
+    setTempNote(prev => prev ? `${prev}, ${note}` : note);
+  };
 
   return (
     <div className="pos-container">
@@ -108,9 +137,15 @@ export default function PosView({
                 <div className="item-index">{index + 1}</div>
                 <div className="item-info">
                   <div className="item-name">
-                    {item.name} {item.sentToKitchen && <span style={{color:'green', fontSize:'12px'}}>✓</span>}
+                    {item.name} {item.sentToKitchen && <span style={{color:'var(--success-color)', fontSize:'14px'}}>✓</span>}
                   </div>
-                  <div className="item-price">{formatMoney(item.price)}</div>
+                  {item.note && (
+                    <div className="item-note">Ghi chú: {item.note}</div>
+                  )}
+                  <div className="item-price">
+                    {formatMoney(item.price)}
+                    <button className="btn-note" onClick={() => openNoteModal(item)}>📝</button>
+                  </div>
                 </div>
                 <div className="item-controls">
                   <button className="btn-qty" onClick={() => onUpdateQuantity(item.id, -1)}>−</button>
@@ -153,12 +188,56 @@ export default function PosView({
         </div>
       </div>
 
+      {/* Modal Ghi chú */}
+      {noteModalTarget && (
+        <div className="modal-overlay no-print">
+          <div className="modal-content note-modal-content">
+            <h3>Ghi chú: {noteModalTarget.name}</h3>
+            
+            <div className="quick-notes-grid">
+              {QUICK_NOTES.map(note => (
+                <button 
+                  key={note} 
+                  className="btn-quick-note"
+                  onClick={() => addQuickNote(note)}
+                >
+                  {note}
+                </button>
+              ))}
+            </div>
+
+            <textarea 
+              className="note-textarea"
+              placeholder="Gõ ghi chú thêm ở đây..."
+              value={tempNote}
+              onChange={(e) => setTempNote(e.target.value)}
+            />
+            
+            <div style={{display:'flex', gap:'8px', marginTop: '16px'}}>
+              <button 
+                className="btn-print" 
+                style={{background: 'var(--text-secondary)'}}
+                onClick={() => setNoteModalTarget(null)}
+              >
+                Hủy
+              </button>
+              <button 
+                className="btn-print" 
+                onClick={saveNote}
+              >
+                Lưu ghi chú
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Thanh toán & QR */}
       {showCheckoutModal && (
         <div className="modal-overlay no-print">
           <div className="modal-content">
             <h3>Thanh toán {currentTable?.name}</h3>
-            <p style={{fontSize:'20px', fontWeight:'bold', color:'var(--danger-color)', margin:'10px 0'}}>
+            <p style={{fontSize:'20px', fontWeight:'900', color:'var(--danger-color)', margin:'10px 0'}}>
               {formatMoney(totalAmount)}
             </p>
             <p style={{fontSize:'14px', color:'var(--text-secondary)'}}>Khách quét mã để chuyển khoản</p>

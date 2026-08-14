@@ -76,6 +76,15 @@ function App() {
     updateCart(currentCart.filter(item => item.id !== id));
   };
 
+  const handleUpdateNote = (id, note) => {
+    updateCart(currentCart.map(item => {
+      if (item.id === id) {
+        return { ...item, note };
+      }
+      return item;
+    }));
+  };
+
   const handleSendToKitchen = () => {
     if (currentCart.length === 0) return;
     
@@ -176,6 +185,7 @@ function App() {
             onAddToCart={handleAddToCart}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveFromCart={handleRemoveFromCart}
+            onUpdateNote={handleUpdateNote}
             onSendToKitchen={handleSendToKitchen}
             onCheckout={handleCheckout}
           />
